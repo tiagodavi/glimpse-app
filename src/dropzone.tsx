@@ -1,6 +1,21 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa, { ParseResult } from 'papaparse';
+import {
+  Box,
+  Button,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  CircularProgress,
+  SelectChangeEvent,
+} from '@mui/material';
 
 interface CsvRow {
   [key: string]: string;
@@ -45,8 +60,8 @@ const Dropzone: React.FC = () => {
     setColumnType(null);
   };
 
-  const handleColumnChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const column = event.target.value;
+  const handleColumnChange = (event: SelectChangeEvent<string>) => {
+    const column = event.target.value as string;
     setSelectedColumn(column);
     if (column) {
       determineColumnType(column);
@@ -54,197 +69,149 @@ const Dropzone: React.FC = () => {
   };
 
   const determineColumnType = (column: string) => {
-    const columnData = csvData.map(row => row[column]).filter(value => value !== undefined);
-    
+    const columnData = csvData
+      .map((row) => row[column])
+      .filter((value) => value !== undefined);
+
     if (columnData.length === 0) {
       setColumnType('Unknown');
       return;
     }
 
-    const isNumeric = columnData.every(value => !isNaN(Number(value)) && value.trim() !== '');
+    const isNumeric = columnData.every(
+      (value) => !isNaN(Number(value)) && value.trim() !== '',
+    );
     setColumnType(isNumeric ? 'Numeric' : 'Text');
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'text/csv': ['.csv']
-    }
+      'text/csv': ['.csv'],
+    },
+    maxFiles: 1,
   });
 
-  const columnOptions = csvData.length > 0 ? Object.keys(csvData[0]).map((col, index) => (
-    <option key={index} value={col}>{col}</option>
-  )) : [];
+  const columnOptions =
+    csvData.length > 0
+      ? Object.keys(csvData[0]).map((col, index) => (
+          <MenuItem key={index} value={col}>
+            {col}
+          </MenuItem>
+        ))
+      : [];
 
   return (
-    <div>
+    <Box sx={{ padding: '20px' }}>
       {csvData.length > 0 ? (
-        <div style={{ padding: '20px', overflowX: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0 }}>CSV Data</h3>
-            <button onClick={handleReset} style={{ padding: '10px 20px' }}>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
+            }}
+          >
+            <Typography variant="h5">CSV Data</Typography>
+            <Button variant="contained" color="primary" onClick={handleReset}>
               Upload Another CSV File
-            </button>
-          </div>
-          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-            <label htmlFor="column-select" style={{ marginRight: '10px' }}>Select Column:</label>
-            <select id="column-select" value={selectedColumn || ''} onChange={handleColumnChange} style={{ padding: '10px' }}>
-              <option value="">-- Select a column --</option>
+            </Button>
+          </Box>
+          <Box sx={{ marginBottom: '20px' }}>
+            <Typography>Select Column:</Typography>
+            <Select
+              value={selectedColumn || ''}
+              onChange={handleColumnChange}
+              aria-label="Select Column"
+              sx={{ marginLeft: '10px', minWidth: '200px' }}
+            >
+              <MenuItem value="">
+                <em>-- Select a column --</em>
+              </MenuItem>
               {columnOptions}
-            </select>
+            </Select>
             {selectedColumn && columnType && (
-              <p>Data Type of Column "{selectedColumn}": {columnType}</p>
+              <Typography>Data Type of Column: {columnType}</Typography>
             )}
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {Object.keys(csvData[0]).map((header, index) => (
-                  <th key={index} style={{ border: '1px solid #ccc', padding: '8px' }}>{header}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {csvData.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {Object.values(row).map((value, colIndex) => (
-                    <td key={colIndex} style={{ border: '1px solid #ccc', padding: '8px' }}>{value}</td>
+          </Box>
+          <TableContainer>
+            <Table sx={{ width: '100%', borderCollapse: 'collapse' }}>
+              <TableHead>
+                <TableRow>
+                  {Object.keys(csvData[0]).map((header, index) => (
+                    <TableCell
+                      key={index}
+                      sx={{
+                        backgroundColor: '#c8e6c9',
+                        fontWeight: 'bold',
+                        borderLeft: '1px solid #ccc',
+                        padding: '8px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {header}
+                    </TableCell>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {csvData.map((row, rowIndex) => (
+                  <TableRow
+                    key={rowIndex}
+                    sx={{
+                      backgroundColor:
+                        rowIndex % 2 === 0 ? '#f1f8e9' : '#ffffff',
+                      '&:hover': {
+                        backgroundColor: '#e0f7fa', // Light cyan color on hover
+                      },
+                    }}
+                  >
+                    {Object.values(row).map((value, colIndex) => (
+                      <TableCell
+                        key={colIndex}
+                        sx={{ border: '1px solid #ccc', padding: '8px' }}
+                      >
+                        {value}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       ) : loading ? (
-        <p>Loading CSV data...</p>
+        <CircularProgress />
       ) : (
-        <div
+        <Box
           {...getRootProps()}
-          style={{
+          aria-label="drop a CSV file here"
+          sx={{
             border: '2px dashed #cccccc',
             padding: '20px',
             textAlign: 'center',
             borderRadius: '4px',
             cursor: 'pointer',
+            backgroundColor: '#f9fbe7',
           }}
         >
-          <input {...getInputProps()} />
+          <input
+            {...getInputProps()}
+            style={{ display: 'none' }}
+            data-testid="file-input"
+          />
           {isDragActive ? (
-            <p>Drop the CSV file here ...</p>
+            <Typography>Drop the CSV file here ...</Typography>
           ) : (
-            <p>Drag 'n' drop a CSV file here, or click to select a file</p>
+            <Typography>
+              Drag 'n' drop a CSV file here, or click to select a file
+            </Typography>
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
 export default Dropzone;
-
-
-// import React, { useCallback, useState } from 'react';
-// import { useDropzone } from 'react-dropzone';
-// import Papa, { ParseResult } from 'papaparse';
-
-// interface CsvRow {
-//   [key: string]: string;
-// }
-
-// const Dropzone: React.FC = () => {
-//   const [csvData, setCsvData] = useState<CsvRow[]>([]);
-//   const [loading, setLoading] = useState<boolean>(false);
-
-//   const onDrop = useCallback((acceptedFiles: File[]) => {
-//     const file = acceptedFiles[0]; // Assuming a single file is uploaded
-
-//     if (file) {
-//       setLoading(true);
-//       const parsedData: CsvRow[] = [];
-
-//       Papa.parse<CsvRow>(file, {
-//         header: true,
-//         skipEmptyLines: true,
-//         chunk: (results: ParseResult<CsvRow>) => {
-//           parsedData.push(...results.data);
-//           setCsvData((prevData) => [...prevData, ...results.data]);
-//         },
-//         complete: () => {
-//           setLoading(false);
-//           console.log('CSV file fully parsed:', parsedData);
-//         },
-//         error: (error) => {
-//           setLoading(false);
-//           console.error('Error parsing CSV:', error);
-//         },
-//       });
-//     }
-//   }, []);
-
-//   const handleReset = () => {
-//     setCsvData([]);
-//     setLoading(false);
-//   };
-
-//   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-//     onDrop,
-//     accept: {
-//       'text/csv': ['.csv']
-//     }
-//   });
-
-//   return (
-//     <div>
-//       {csvData.length > 0 ? (
-//         <div style={{ padding: '20px', overflowX: 'auto' }}>
-//           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'left', margin: '0 0 10px 0' }}>
-//             <h3 style={{ margin: 0 }}>CSV Data</h3>
-//             <button onClick={handleReset} style={{ padding: '10px 20px' }}>
-//               Upload Another CSV File
-//             </button>
-//           </div>
-//           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-//             <thead>
-//               <tr>
-//                 {Object.keys(csvData[0]).map((header, index) => (
-//                   <th key={index} style={{ border: '1px solid #ccc', padding: '8px' }}>{header}</th>
-//                 ))}
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {csvData.map((row, rowIndex) => (
-//                 <tr key={rowIndex}>
-//                   {Object.values(row).map((value, colIndex) => (
-//                     <td key={colIndex} style={{ border: '1px solid #ccc', padding: '8px' }}>{value}</td>
-//                   ))}
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       ) : loading ? (
-//         <p>Loading CSV data...</p>
-//       ) : (
-//         <div
-//           {...getRootProps()}
-//           style={{
-//             border: '2px dashed #cccccc',
-//             padding: '20px',
-//             textAlign: 'center',
-//             borderRadius: '4px',
-//             cursor: 'pointer',
-//           }}
-//         >
-//           <input {...getInputProps()} />
-//           {isDragActive ? (
-//             <p>Drop the CSV file here ...</p>
-//           ) : (
-//             <p>Drag 'n' drop a CSV file here, or click to select a file</p>
-//           )}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Dropzone;
