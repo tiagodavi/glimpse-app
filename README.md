@@ -2,6 +2,8 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+- Live APP: https://glimpse-lovat.vercel.app
+
 - Loom Video: https://www.loom.com/share/69a9c85da7724a31a930c53c20260be3?sid=34a9807e-1695-4959-a363-c591d86fe1e6
 
 ## Available Scripts
