@@ -22,8 +22,20 @@ jest.mock('papaparse', () => ({
       { Name: 'Bob', Age: '25' },
     ];
 
-    chunk({ data: mockData, errors: [], meta: { cursor: 0 } });
-    complete({ data: mockData, errors: [], meta: { cursor: 0 } });
+    const mockParseResult: ParseResult<{ Name: string; Age: string }> = {
+      data: mockData,
+      errors: [],
+      meta: {
+        delimiter: ',',
+        aborted: false,
+        truncated: false,
+        cursor: 0,
+        linebreak: '\n',
+      },
+    };
+
+    chunk(mockParseResult);
+    complete(mockParseResult);
   },
 }));
 
